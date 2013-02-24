@@ -1,4 +1,5 @@
-mergemap
-========
+# mergemap
 
-Go library to recursively merge JSON maps
+mergemap is a Go library to recursively merge JSON maps.
+
+
