@@ -24,7 +24,11 @@ func merge(dst, src map[string]interface{}, depth int) (map[string]interface{}, 
 			srcMap, srcMapOk := mapify(srcVal)
 			dstMap, dstMapOk := mapify(dstVal)
 			if srcMapOk && dstMapOk {
-				srcVal = merge(dstMap, srcMap, depth+1)
+				var err error
+				srcVal, err = merge(dstMap, srcMap, depth+1)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 		dst[key] = srcVal
