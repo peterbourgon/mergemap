@@ -22,7 +22,7 @@ var m1, m2 map[string]interface{}
 json.Unmarshal(buf1, &m1)
 json.Unmarshal(buf2, &m2)
 
-merged := mergemap.Merge(m1, m2)
+merged, err := mergemap.Merge(m1, m2)
 ```
 
 See the test file for some pretty straightforward examples.
