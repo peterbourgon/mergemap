@@ -1,6 +1,7 @@
 package mergemap
 
 import (
+	"errors"
 	"reflect"
 )
 
@@ -10,13 +11,13 @@ var (
 
 // Merge recursively merges the src and dst maps. Key conflicts are resolved by
 // preferring src, or recursively descending, if both src and dst are maps.
-func Merge(dst, src map[string]interface{}) map[string]interface{} {
+func Merge(dst, src map[string]interface{}) (map[string]interface{}, error) {
 	return merge(dst, src, 0)
 }
 
-func merge(dst, src map[string]interface{}, depth int) map[string]interface{} {
+func merge(dst, src map[string]interface{}, depth int) (map[string]interface{}, error) {
 	if depth > MaxDepth {
-		panic("too deep!")
+		return nil, errors.New("mergemap: maps too deeply nested")
 	}
 	for key, srcVal := range src {
 		if dstVal, ok := dst[key]; ok {
@@ -28,7 +29,7 @@ func merge(dst, src map[string]interface{}, depth int) map[string]interface{} {
 		}
 		dst[key] = srcVal
 	}
-	return dst
+	return dst, nil
 }
 
 func mapify(i interface{}) (map[string]interface{}, bool) {
