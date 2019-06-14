@@ -3,6 +3,8 @@ package mergemap
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -66,9 +68,50 @@ func TestMerge(t *testing.T) {
 			continue
 		}
 
-		got := Merge(dst, src)
+		got, err := Merge(dst, src)
+		if err != nil {
+			t.Errorf("expected nil error, got %s", err)
+		}
 		assert(t, expected, got)
 	}
+}
+
+func TestMergeWithMaxDepth(t *testing.T) {
+	dst := `{"a": {"b": {"c": "d"}}}`
+	src := `{"a": {"b": {"c": "e"}}}`
+	_, err := Merge(unmarshal(dst), unmarshal(src), WithMaxDepth(1))
+	if err != ErrTooDeep {
+		t.Errorf("expected %s, got %s", ErrTooDeep, err)
+	}
+}
+
+func TestMergeWithAppendSlice(t *testing.T) {
+	dst := `{"a": ["b", true, null]}`
+	src := `{"a": [1, 1.5, {"c": "d"}]}`
+	expected := `{"a": ["b", true, null, 1, 1.5, {"c": "d"}]}`
+	got, err := Merge(unmarshal(dst), unmarshal(src), WithAppendSlice)
+	if err != nil {
+		t.Errorf("expected nil error, got %s", err)
+	}
+	assert(t, unmarshal(expected), got)
+}
+
+func TestMergeWithKeyStringer(t *testing.T) {
+	dst := map[string]interface{}{"a": map[interface{}]interface{}{false: nil, nil: nil}}
+	src := map[string]interface{}{"a": map[interface{}]interface{}{true: nil}}
+	expected := map[string]interface{}{"a": map[string]interface{}{"true": nil, "false": nil, "null": nil}}
+
+	keyStringer := func(mapKey reflect.Value) string {
+		if mapKey.Kind() == reflect.Interface && mapKey.IsNil() {
+			return "null"
+		}
+		return fmt.Sprint(mapKey)
+	}
+	got, err := Merge(dst, src, WithKeyStringer(keyStringer))
+	if err != nil {
+		t.Errorf("expected nil error, got %s", err)
+	}
+	assert(t, expected, got)
 }
 
 func assert(t *testing.T, expected, got map[string]interface{}) {
@@ -86,4 +129,12 @@ func assert(t *testing.T, expected, got map[string]interface{}) {
 		t.Errorf("expected %s, got %s", string(expectedBuf), string(gotBuf))
 		return
 	}
+}
+
+func unmarshal(s string) map[string]interface{} {
+	var target map[string]interface{}
+	if err := json.Unmarshal([]byte(s), &target); err != nil {
+		panic(err)
+	}
+	return target
 }
