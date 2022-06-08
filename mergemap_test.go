@@ -47,6 +47,11 @@ func TestMerge(t *testing.T) {
 			dst:      `{"1": {        "2": { "3": {"a":"A",        "n":"xxx"} }, "a":3 }}`,
 			expected: `{"1": { "b":1, "2": { "3": {"a":"A", "b":3, "n":[1,2]} }, "a":3 }}`,
 		},
+		{
+			src:      `{"1": {"a": "str1", "b": ["arr1", "arr2"]}}`,
+			dst:      `{"1": {             "b": ["arr3"],                 "c": "str2" }}`,
+			expected: `{"1": {"a": "str1", "b": ["arr1", "arr2", "arr3"], "c": "str2" }}`,
+		},
 	} {
 		var dst map[string]interface{}
 		if err := json.Unmarshal([]byte(tuple.dst), &dst); err != nil {

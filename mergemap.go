@@ -20,6 +20,10 @@ func merge(dst, src map[string]interface{}, depth int) map[string]interface{} {
 	}
 	for key, srcVal := range src {
 		if dstVal, ok := dst[key]; ok {
+			srcSlice, sliceOk := mergeSlices(srcVal, dstVal)
+			if sliceOk {
+				srcVal = srcSlice
+			}
 			srcMap, srcMapOk := mapify(srcVal)
 			dstMap, dstMapOk := mapify(dstVal)
 			if srcMapOk && dstMapOk {
@@ -41,4 +45,19 @@ func mapify(i interface{}) (map[string]interface{}, bool) {
 		return m, true
 	}
 	return map[string]interface{}{}, false
+}
+
+func mergeSlices(src, dst interface{}) (interface{}, bool) {
+	srcSlice, srcOk := src.([]interface{})
+	dstSlice, dstOk := dst.([]interface{})
+
+	if !(srcOk && dstOk) {
+		return nil, false
+	}
+
+	if !reflect.DeepEqual(srcSlice, dstSlice) {
+		srcSlice = append(srcSlice, dstSlice...)
+	}
+
+	return srcSlice, true
 }
